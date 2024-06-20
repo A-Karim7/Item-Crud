@@ -1,3 +1,4 @@
+// src/components/ItemList.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, FlatList } from 'react-native';
 import { useGetItemsQuery, useAddItemMutation, useUpdateItemMutation, useDeleteItemMutation } from '../services/apiSlice';
@@ -7,11 +8,22 @@ const ItemList = () => {
     const [addItem] = useAddItemMutation();
     const [updateItem] = useUpdateItemMutation();
     const [deleteItem] = useDeleteItemMutation();
-    const [newItem, setNewItem] = useState('');
+
+    const getNextItemName = () => {
+        if (!items || items.length === 0) {
+            return 'Item 1';
+        }
+        const itemNumbers = items.map(item => {
+            const match = item.name.match(/Item (\d+)/);
+            return match ? parseInt(match[1], 10) : 0;
+        });
+        const maxNumber = Math.max(...itemNumbers);
+        return `Item ${maxNumber + 1}`;
+    };
 
     const handleAddItem = () => {
-        addItem({ name: newItem });
-        setNewItem('');
+        const newItemName = getNextItemName();
+        addItem({ name: newItemName });
     };
 
     if (isLoading) return <Text>Loading...</Text>;
@@ -19,15 +31,10 @@ const ItemList = () => {
 
     return (
         <View>
-            <TextInput
-                placeholder="New Item"
-                value={newItem}
-                onChangeText={setNewItem}
-            />
             <Button title="Add Item" onPress={handleAddItem} />
             <FlatList
                 data={items}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                     <View>
                         <Text>{item.name}</Text>
